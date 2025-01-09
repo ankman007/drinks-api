@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
 from rest_framework.decorators import api_view
@@ -7,6 +7,9 @@ from rest_framework import status
 
 from .serializers import DrinkSerializer
 from .models import Drink
+
+from rest_framework.pagination import PageNumberPagination
+from django.core.paginator import Paginator
 
 
 # Helper function to handle exceptions
@@ -29,7 +32,11 @@ def api_overview(request):
 @api_view(['GET'])
 def drink_list(request):
     try:
-        drinks = Drink.objects.all()
+        limit = request.query_params.get('limit', 100)
+        offset = request.query_params.get('offset', 0)
+        
+        drinks = Drink.objects.all()[int(offset):int(offset) + int(limit)]
+        
         serializer = DrinkSerializer(drinks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
